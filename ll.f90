@@ -115,6 +115,34 @@ integer function list_find(self, val)
     list_find = ans
 end function list_find
 
+subroutine list_remove(self, val)
+    ! Remove the first occurrence of val from the list
+    integer, intent(in) :: val
+    type(node), pointer :: self
+    type(node), pointer :: tmp, prev, next
+    tmp => self
+
+    find: do while ( associated(tmp))
+        if (tmp%value == val) then
+            next => tmp%next
+            ! Do special if first element
+            if (.not. associated(self)) then
+                self%next => next
+            else if (associated(next) ) then
+                prev%next => next
+            else
+                prev%next => null()
+            end if
+            deallocate(tmp)
+            nullify(tmp)
+            exit find
+        end if
+        prev => tmp
+        tmp => tmp%next
+    end do find
+
+end subroutine list_remove
+
 subroutine list_free(self)
     ! Safely demolish this list
     type(node), pointer :: self, tmp

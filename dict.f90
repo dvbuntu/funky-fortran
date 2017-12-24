@@ -96,6 +96,60 @@ subroutine hasht_add(self, val)
     end if
 end subroutine hasht_add
 
+subroutine hasht_remove(self, val)
+    ! Remove a value from the hash table
+    type(hasht), intent(inout) :: self
+    integer :: val, ierror, idx
+    type(node), pointer :: tmp
+
+    
+    idx = hasht_modhash(self,val)
+    if (hasht_check(self,val) ) then
+        call list_remove(self%arr(idx)%list,val)
+    end if
+
+end subroutine hasht_remove
+
+subroutine hasht_print(self)
+    ! Show the hash table, one line per idx
+    type(hasht), intent(inout) :: self
+    integer :: idx, ierror
+    logical :: assoc
+
+    nuke: do idx = 0,self%tlen-1
+        write(*,"(I10,A)", advance="no") idx, " : "
+        assoc = associated(self%arr(idx)%list)
+        if (assoc) then
+            if (self%arr(idx)%list%initialized) then
+                call list_print(self%arr(idx)%list)
+            else
+                write(*,*) ""
+            end if
+        else
+            write(*,*) ""
+        end if
+    end do nuke
+
+end subroutine hasht_print
+
+subroutine hasht_free(self)
+    ! Safely nuke a hash table
+    type(hasht), intent(inout) :: self
+    integer :: idx, ierror
+    logical :: assoc
+
+    nuke: do idx = 0,self%tlen-1
+        assoc = associated(self%arr(idx)%list)
+        if (assoc) then
+            if (self%arr(idx)%list%initialized) then
+                call list_free(self%arr(idx)%list)
+            end if
+        end if
+    end do nuke
+    deallocate(self%arr, stat=ierror)
+
+end subroutine hasht_free
+
 end module dict
 
 
@@ -120,6 +174,9 @@ program dict_test
     write(*,*) "Len:", list_len(head)
     write(*,*) "Where's 3?:", list_find(head,3)
     write(*,*) "Where's 22?:", list_find(head,22)
+    write(*,*) "Remove 4"
+    call list_remove(head,4)
+    call list_print(head)
     call list_free(head)
     nullify(head)
     write(*,*) "Len:", list_len(head)
@@ -140,5 +197,15 @@ program dict_test
     write(*,*) "Adding 4 + 16!"
     call hasht_add(H,4+16)
     write(*,*) "Have we seen 4 + 16?: ", hasht_check(H,4+16)
-
+    write(*,*) "Remove 4"
+    call hasht_remove(H,4)
+    write(*,*) "Have we seen 4?: ", hasht_check(H,4)
+    write(*,*) "Add a bunch"
+    do ii = 10, 30
+        call hasht_add(H, ii)
+    end do
+    write(*,*) "Print it!"
+    call hasht_print(H)
+    write(*,*) "Nuking it"
+    call hasht_free(H)
 end program dict_test
