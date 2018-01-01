@@ -33,16 +33,23 @@ subroutine list_push(self, val)
     type(node), pointer :: self
     type(node), pointer :: tmp
     type(string), intent(in) :: val
+    type(string), allocatable :: newstring
+    integer :: i
+
+    ! Make memory for and copy string
+    allocate(newstring)
+    
+    newstring%str = val%str(1:len(val%str))
 
     if ( .not. associated(self)  ) then
-        call list_init(self, val)
+        call list_init(self, newstring)
     else if (.not. self%initialized) then
-        call list_init(self, val)
+        call list_init(self, newstring)
     else
         ! Get new memory
         allocate(tmp)
         ! Assign value
-        tmp%value = val
+        tmp%value = newstring
         ! Point to previous
         tmp%next => self
         ! Initialize this one too
@@ -75,10 +82,12 @@ subroutine list_print(self)
     type(node), pointer :: self, tmp
     tmp => self
 
-    do while ( associated(tmp))
-        write(*,*) tmp%value%str
-        tmp => tmp%next
-    end do
+    if (self%initialized) then
+        do while ( associated(tmp))
+            write(*,*) tmp%value%str
+            tmp => tmp%next
+        end do
+    end if
 end subroutine list_print
 
 integer function list_len(self)
@@ -125,6 +134,7 @@ subroutine list_remove(self, val)
     type(node), pointer :: self
     type(node), pointer :: tmp, prev, next
     tmp => self
+    nullify(prev)
 
     find: do while ( associated(tmp))
         if (tmp%value%str == val%str) then
@@ -134,8 +144,11 @@ subroutine list_remove(self, val)
                 self%next => next
             else if (associated(next) ) then
                 prev%next => next
-            else
+            else if (associated(prev) ) then
                 prev%next => null()
+            else
+                ! Only had one element, so shut down
+                self%initialized = .false.
             end if
             deallocate(tmp%value)
             deallocate(tmp)
