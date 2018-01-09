@@ -18,15 +18,14 @@ module dict_str
 contains
 
 integer function hasht_str_modhash(self,str)
-    !character(len=*),intent(in) :: str
-    type(string) :: str
+    character(len=*), intent(in) :: str
     type(hasht_str),intent(inout) :: self
     integer :: k, hash
 
     hash = 5381
 
-    do k=1,len(str%str)
-        hash = (ishft(hash,5) + hash) + ichar(str%str(k:k))
+    do k=1,len(str)
+        hash = (ishft(hash,5) + hash) + ichar(str(k:k))
     end do
     ! Make sure to keep within length
     hasht_str_modhash = modulo(hash,self%tlen)
@@ -47,7 +46,7 @@ logical function hasht_str_check(self, val)
     ! Check if val is in the hash table
     type(hasht_str), intent(inout) :: self
     integer :: idx
-    type(string) :: val
+    character(len=*), intent(in) :: val
     logical :: assoc
 
     idx = hasht_str_modhash(self,val)
@@ -76,7 +75,7 @@ subroutine hasht_str_add(self, val)
     type(hasht_str), intent(inout) :: self
     integer :: ierror, idx
     type(node), pointer :: tmp
-    type(string) :: val
+    character(len=*), intent(in) :: val
 
     !tmp => self%arr(idx)
 
@@ -96,7 +95,7 @@ subroutine hasht_str_remove(self, val)
     type(hasht_str), intent(inout) :: self
     integer :: ierror, idx
     type(node), pointer :: tmp
-    type(string) :: val
+    character(len=*), intent(in) :: val
 
     
     idx = hasht_str_modhash(self,val)
@@ -156,46 +155,43 @@ program dict_test
     implicit none
     type(node), pointer :: head
     integer :: ii 
-    type(string), allocatable :: foo, foo2, val
-    type(string), allocatable :: strs(:)
+    character(len=:), allocatable :: foo, foo2
+    character(len=:), allocatable :: val
+    type(string) :: strs(0:9)
     type(hasht_str) :: H ! Don't use a pointer
 
-    allocate(foo)
-    allocate(foo2)
-    allocate(val)
-    foo%str = "FOO"
-    foo2%str = "FOO"
-
-    allocate(strs(0:9))
+    foo = "FOO"
+    foo2 = "FOO"
 
     do ii = 0, 9
         allocate(character(len=10) :: strs(ii)%str)
-        write(strs(ii)%str,'(i10)') ii+10
+        write(strs(ii)%str,'(i10)') ii
         !strs(ii)%str = char(i+30)
         write(*,*) strs(ii)%str
         strs(ii)%str = adjustl(strs(ii)%str)
     end do
 
     write(*,*) "Linked List"
-    call list_init(head, strs(0))
+    call list_init(head, strs(0)%str)
     do ii = 1,9
-        call list_push(head, strs(ii))
+        call list_push(head, strs(ii)%str)
     end do
     call list_print(head)
     write(*,*) "Len:", list_len(head)
     val = list_pop(head)
-    write(*,*) "Popped:", val%str
+    write(*,*) "Popped:", val
     call list_print(head)
     write(*,*) "Len:", list_len(head)
-    val%str = 'val'
+    val = 'val'
     write(*,*) "Where's 'val'?:", list_find(head,val)
-    val%str = '3'
+    val = '3'
     write(*,*) "Where's '3'?:", list_find(head,val)
     call list_remove(head,val)
     call list_print(head)
     call list_free(head)
     nullify(head)
     write(*,*) "Len:", list_len(head)
+
     write(*,*) ""
     write(*,*) "Hash Table fun"
     ! Create a hash table of certain size
@@ -203,7 +199,6 @@ program dict_test
 
     ! Check if a value is in there
     write(*,*) "hash('FOO')?: ", hasht_str_modhash(H,foo)
-!    write(*,*) "hash(17)?: ", hasht_str_modhash(H,17)
     write(*,*) "Have we seen 'FOO'?: ", hasht_str_check(H,foo)
     write(*,*) "Adding 'FOO'!"
     call hasht_str_add(H,foo)
@@ -214,7 +209,7 @@ program dict_test
     write(*,*) "Add a bunch"
     ! Just to make sure they're not mucked up
     do ii = 0, 9
-        call hasht_str_add(H, strs(ii))
+        call hasht_str_add(H, strs(ii)%str)
     end do
     write(*,*) "Put FOO back"
     call hasht_str_add(H,foo)

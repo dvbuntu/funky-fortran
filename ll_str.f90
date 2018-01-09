@@ -192,45 +192,45 @@ end subroutine list_free
 end module ll_str
 
 
-program linker
-! Make a simple linked list with pointers
-    use ll_str
-    implicit none
-    type(node), pointer :: head
-    integer :: ii 
-    character(len=:), allocatable :: foo
-    character(len=:), allocatable :: val
-    type(string) :: strs(0:9)
-
-    foo = "FOO"
-
-    do ii = 0, 9
-        allocate(character(len=10) :: strs(ii)%str)
-        write(strs(ii)%str,'(i10)') ii
-        !strs(ii)%str = char(i+30)
-        write(*,*) strs(ii)%str
-        strs(ii)%str = adjustl(strs(ii)%str)
-    end do
-
-    write(*,*) "Linked List"
-    call list_init(head, strs(0)%str)
-    do ii = 1,9
-        call list_push(head, strs(ii)%str)
-    end do
-    call list_print(head)
-    write(*,*) "Len:", list_len(head)
-    val = list_pop(head)
-    write(*,*) "Popped:", val
-    call list_print(head)
-    write(*,*) "Len:", list_len(head)
-    val = 'val'
-    write(*,*) "Where's 'val'?:", list_find(head,val)
-    val = '3'
-    write(*,*) "Where's '3'?:", list_find(head,val)
-    call list_remove(head,val)
-    call list_print(head)
-    call list_free(head)
-    nullify(head)
-    write(*,*) "Len:", list_len(head)
-
-end program linker
+!program linker
+!! Make a simple linked list with pointers
+!    use ll_str
+!    implicit none
+!    type(node), pointer :: head
+!    integer :: ii 
+!    character(len=:), allocatable :: foo
+!    character(len=:), allocatable :: val
+!    type(string) :: strs(0:9)
+!
+!    foo = "FOO"
+!
+!    do ii = 0, 9
+!        allocate(character(len=10) :: strs(ii)%str)
+!        write(strs(ii)%str,'(i10)') ii
+!        !strs(ii)%str = char(i+30)
+!        write(*,*) strs(ii)%str
+!        strs(ii)%str = adjustl(strs(ii)%str)
+!    end do
+!
+!    write(*,*) "Linked List"
+!    call list_init(head, strs(0)%str)
+!    do ii = 1,9
+!        call list_push(head, strs(ii)%str)
+!    end do
+!    call list_print(head)
+!    write(*,*) "Len:", list_len(head)
+!    val = list_pop(head)
+!    write(*,*) "Popped:", val
+!    call list_print(head)
+!    write(*,*) "Len:", list_len(head)
+!    val = 'val'
+!    write(*,*) "Where's 'val'?:", list_find(head,val)
+!    val = '3'
+!    write(*,*) "Where's '3'?:", list_find(head,val)
+!    call list_remove(head,val)
+!    call list_print(head)
+!    call list_free(head)
+!    nullify(head)
+!    write(*,*) "Len:", list_len(head)
+!
+!end program linker
