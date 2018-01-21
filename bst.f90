@@ -144,28 +144,31 @@ end subroutine bst_print
 !    list_len = l
 !end function list_len
 !
-!integer function list_find(self, val)
-!    ! Find index of value in list
-!    ! If not found, return -1
-!    integer, intent(in) :: val
-!    integer :: idx, ans
-!    type(node), target :: self
-!    type(node), pointer :: tmp
-!    tmp => self
-!    ans = -1
-!    idx = 0
-!
-!    find: do while ( associated(tmp))
-!        if (tmp%value == val) then
-!            ans = idx  
-!        end if
-!        idx = idx + 1
-!        tmp => tmp%next
-!    end do find
-!
-!    list_find = ans
-!end function list_find
-!
+recursive function bst_find(self, val) result(ans)
+    ! Find node containing value
+    ! If not found, return node with null
+    integer, intent(in) :: val
+    type(node), target :: self
+    type(node), pointer :: tmp, ans
+    tmp => self
+    ans => null()
+
+    if (associated(tmp)) then
+        if (tmp%value == val) then
+            ans => tmp
+            return
+        end if
+        if (associated(tmp%left)) then
+            ans => bst_find(tmp%left, val)
+            if (associated(ans)) return
+        end if
+        if (associated(tmp%right)) then
+            ans => bst_find(tmp%right, val)
+            if (associated(ans)) return
+        end if
+    end if
+end function bst_find
+
 !subroutine list_remove(self, val)
 !    ! Remove the first occurrence of val from the list
 !    integer, intent(in) :: val
@@ -227,6 +230,8 @@ program treetest
     call bst_add(head, 8)
     call bst_add(head, 5)
     call bst_print(head)
+    write(*,*) "Locate 3"
+    call bst_print(bst_find(head,3))
 !    write(*,*) "Len:", list_len(head)
 !    val = list_pop(head)
 !    write(*,*) "Popped:", val
