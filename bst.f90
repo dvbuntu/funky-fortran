@@ -48,6 +48,7 @@ subroutine bst_add(self, val)
                     tmp => tmp%left
                 else
                     pos => tmp
+                    ! New memory
                     allocate(tmp%left)
                     tmp => tmp%left
                     pos%left => tmp
@@ -61,6 +62,7 @@ subroutine bst_add(self, val)
                     tmp => tmp%right
                 else
                     pos => tmp
+                    ! New memory
                     allocate(tmp%right)
                     tmp => tmp%right
                     pos%right => tmp
@@ -70,8 +72,6 @@ subroutine bst_add(self, val)
         end do recurse
 
         if (associated(pos)) then
-            ! Get new memory
-            !allocate(tmp)
             ! Assign value
             tmp%value = val
             ! Point to parent
@@ -169,33 +169,52 @@ recursive function bst_find(self, val) result(ans)
     end if
 end function bst_find
 
-!subroutine list_remove(self, val)
-!    ! Remove the first occurrence of val from the list
-!    integer, intent(in) :: val
-!    type(node), pointer :: self
-!    type(node), pointer :: tmp, prev, next
-!    tmp => self
-!
-!    find: do while ( associated(tmp))
-!        if (tmp%value == val) then
-!            next => tmp%next
-!            ! Do special if first element
-!            if (.not. associated(self)) then
-!                self%next => next
-!            else if (associated(next) ) then
-!                prev%next => next
-!            else
-!                prev%next => null()
-!            end if
-!            deallocate(tmp)
-!            nullify(tmp)
-!            exit find
-!        end if
-!        prev => tmp
-!        tmp => tmp%next
-!    end do find
-!
-!end subroutine list_remove
+subroutine bst_remove(self, val)
+    ! Remove the occurrence of val from the bst
+    integer, intent(in) :: val
+    type(node), pointer :: self
+    type(node), pointer :: tmp, loc, parent
+    tmp => self
+
+    loc => bst_find(tmp, val)
+
+    if (associated(loc)) then
+        ! Three options, leaf, 1 child, 2 children
+        ! Leaf
+        if ( .not. associated(loc%left) .and. .not. associated(loc%right) ) then
+            ! Remove link from parent
+            parent => loc%parent
+            if ( parent%left%value == val) then
+                parent%left => null()
+            else if ( parent%right%value == val ) then
+                parent%right => null()
+            end if
+            ! Free memory
+            deallocate(loc)
+        ! 1 child
+        else if ( associated(loc%left) .neqv. associated(loc%right) )  then
+            ! Replace current with child
+            if ( associated(loc%left)) then
+                loc%value = loc%left%value
+                deallocate(loc%left)
+                loc%left => null()
+            else if ( associated(loc%right)) then
+                loc%value = loc%right%value
+                deallocate(loc%right)
+                loc%right => null()
+            end if
+        ! 2 children, chase down first right, then left
+        else
+            tmp => loc%right
+            do while (associated(tmp%left))
+                tmp => tmp%left
+            end do
+            loc%value = tmp%value
+            tmp%parent%left => null()
+            deallocate(tmp)
+        end if
+    end if
+end subroutine bst_remove
 !
 !subroutine list_free(self)
 !    ! Safely demolish this list
@@ -232,6 +251,15 @@ program treetest
     call bst_print(head)
     write(*,*) "Locate 3"
     call bst_print(bst_find(head,3))
+    write(*,*) "Remove 8"
+    call bst_remove(head,8)
+    call bst_print(head)
+    write(*,*) "Remove 3"
+    call bst_remove(head,3)
+    call bst_print(head)
+    write(*,*) "Remove 4"
+    call bst_remove(head,4)
+    call bst_print(head)
 !    write(*,*) "Len:", list_len(head)
 !    val = list_pop(head)
 !    write(*,*) "Popped:", val
