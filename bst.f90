@@ -125,6 +125,8 @@ recursive subroutine bst_print(self, depth)
         ! Depth first print... not great
         call bst_print(tmp%left, d+1)
         call bst_print(tmp%right, d+1)
+    else if (.not. associated(tmp) .and. d == 0) then
+        write(*,*) "Empty!"
     end if
 end subroutine bst_print
 
@@ -215,19 +217,16 @@ subroutine bst_remove(self, val)
         end if
     end if
 end subroutine bst_remove
-!
-!subroutine list_free(self)
-!    ! Safely demolish this list
-!    type(node), pointer :: self, tmp
-!    
-!    do while ( associated(self))
-!        tmp => self
-!        self => self%next
-!        deallocate(tmp)
-!        nullify(tmp)
-!    end do
-!end subroutine list_free
-!
+
+recursive subroutine bst_free(self)
+    ! Safely demolish this list
+    type(node), pointer :: self, tmp
+    
+    if (associated(self%left)) call bst_free(self%left)
+    if (associated(self%right)) call bst_free(self%right)
+    deallocate(self)
+end subroutine bst_free
+
 end module bst
 
 
@@ -267,7 +266,8 @@ program treetest
 !    write(*,*) "Len:", list_len(head)
 !    write(*,*) "Where's 3?:", list_find(head,3)
 !    write(*,*) "Where's 22?:", list_find(head,22)
-!    call list_free(head)
+    call bst_free(head)
+    call bst_print(head)
 !    nullify(head)
 !    write(*,*) "Len:", list_len(head)
 
