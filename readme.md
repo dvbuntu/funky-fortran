@@ -11,5 +11,4 @@ Fortran is capable of some amazing and convenient things for numerical computing
 
 ## Other structures to add
 
-* Binary tree (Just use array with 2i and 2i+1?)
 * General sparse graph (using linked nodes rather than an adjacency matrix, but maybe it's better to compress such an array)
