@@ -106,24 +106,59 @@ subroutine heap_add(self, val)
     end if
 
 end subroutine heap_add
-!
-!!integer function list_pop(self)
-!!    ! Return top value and set head to next
-!!    integer :: val
-!!    type(node), pointer :: self, tmp
-!!    ! Grab the value
-!!    val = self%value
-!!    ! Save to dealloc later
-!!    tmp => self
-!!    ! Advance head
-!!    self => self%next
-!!    ! Free memory
-!!    deallocate(tmp)
-!!
-!!    list_pop = val ! This is stupid and confusing
-!!    return
-!!end function list_pop
-!!
+
+integer function heap_pop(self)
+    ! Return root node and update the heap
+    integer :: val
+    type(node), pointer :: self, tmp
+    ! Grab the value
+    val = self%value
+    ! Start winding down the tree
+    tmp => self
+
+    ! Swap parent with smaller child and continue down
+    do while(associated(tmp%left) .or. associated(tmp%right))
+        if (associated(tmp%left) .and. associated(tmp%right)) then
+            if (tmp%left%value > tmp%right%value) then
+                tmp%value = tmp%right%value
+                tmp => tmp%right
+                cycle 
+            else if (tmp%left%value < tmp%right%value) then
+                tmp%value = tmp%left%value
+                tmp => tmp%left
+                cycle 
+            end if
+        else if (associated(tmp%left)) then
+                tmp%value = tmp%left%value
+                tmp => tmp%left
+                cycle 
+        else if (associated(tmp%right)) then
+                tmp%value = tmp%right%value
+                tmp => tmp%right
+                cycle 
+        end if
+    end do
+
+    ! Double check we're at a leaf
+    if (associated(tmp%left) .or. associated(tmp%right)) then
+        write(*,*) "Shouldn't have any children!"
+    end if
+
+    ! Fix parent
+    if (tmp%parent%left%value == tmp%value) then
+        tmp%parent%left => null()
+    else if (tmp%parent%right%value == tmp%value) then
+        tmp%parent%right => null()
+    end if
+
+    ! Free memory
+    if (associated(tmp)) deallocate(tmp)
+
+
+    heap_pop = val ! This is stupid and confusing
+    return
+end function heap_pop
+
 recursive subroutine heap_print(self, depth)
     ! Print all values
     type(node), pointer :: self, tmp
@@ -280,14 +315,12 @@ program heaptest
     call heap_add(head, 8)
     call heap_add(head, 5)
     call heap_print(head)
-!    write(*,*) "Locate 3"
-!    call heap_print(heap_find(head,3))
-!    write(*,*) "Remove 8"
-!    call heap_remove(head,8)
-!    call heap_print(head)
-!    write(*,*) "Remove 3"
-!    call heap_remove(head,3)
-!    call heap_print(head)
+    write(*,*) "Pop root"
+    write(*,*) heap_pop(head)
+    call heap_print(head)
+    write(*,*) "Pop root"
+    write(*,*) heap_pop(head)
+    call heap_print(head)
 !    write(*,*) "Remove 4"
 !    call heap_remove(head,4)
 !    call heap_print(head)
